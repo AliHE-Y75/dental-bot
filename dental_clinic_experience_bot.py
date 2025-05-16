@@ -6,6 +6,7 @@ from __future__ import annotations
 from dotenv import load_dotenv
 load_dotenv()
 
+import asyncio
 
 import datetime as _dt, logging, os, sqlite3, sys
 from pathlib import Path
