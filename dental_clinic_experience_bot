@@ -286,5 +286,34 @@ async def view_clinic(call:types.CallbackQuery,s:FSMContext):
     for p in parts: await bot.send_message(call.from_user.id,p)
     await call.answer(); await s.finish()
 
-if __name__=="__main__":
-    init_db(); executor.start_polling(dp,skip_updates=True)
+# ==[1]== وارد کردن FastAPI و threading
+from fastapi import FastAPI
+import threading
+
+# ==[2]== تعریف شیء FastAPI
+app = FastAPI()
+
+# ---------------------------------
+# ... (کدهای قبلی Aiogram؛ مثل importها، تعریف bot و dp، هندلرها ...)
+# ---------------------------------
+
+# ==[3]== تابعی که ربات را اجرا می‌کند
+def _start_bot():
+    # توجه: dp را همین فایل ساخته است، بنابراین مستقیم استفاده می‌شود
+    from aiogram import executor
+    executor.start_polling(dp, skip_updates=True)
+
+# ==[4]== 이벤트 استارتاپ FastAPI
+@app.on_event("startup")
+async def on_startup():
+    threading.Thread(target=_start_bot, daemon=True).start()
+
+# ==[5]== یک روت ساده برای health-check
+@app.get("/")
+async def root():
+    return {"status": "ok"}
+
+# ==[6]==  ⬇️ این دو خط قدیمی را **حذف یا کامنت** کنید
+# if __name__ == "__main__":
+#     executor.start_polling(dp, skip_updates=True)
+
