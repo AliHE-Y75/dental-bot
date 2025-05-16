@@ -300,8 +300,11 @@ app = FastAPI()
 # ==[3]== تابعی که ربات را اجرا می‌کند
 def _start_bot():
     # توجه: dp را همین فایل ساخته است، بنابراین مستقیم استفاده می‌شود
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
     from aiogram import executor
-    executor.start_polling(dp, skip_updates=True)
+    executor.start_polling(dp, skip_updates=True, loop=loop)
 
 # ==[4]== 이벤트 استارتاپ FastAPI
 @app.on_event("startup")
