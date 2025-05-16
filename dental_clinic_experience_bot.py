@@ -127,7 +127,7 @@ async def _start(m:types.Message):
 
 @dp.message_handler(commands=["cancel"],state="*")
 @dp.message_handler(lambda x:x.text=="لغو",state="*")
-async def _cancel(m:types.Message,s:FSMContext):
+async def _cancel(m:types.Message,state: FSMContext):
     if await s.get_state():
         await s.finish(); await m.reply("لغو شد",reply_markup=types.ReplyKeyboardRemove())
     else:
@@ -139,14 +139,14 @@ async def add_start(m:types.Message):
     await m.reply("نام کلینیک؟")
 
 @dp.message_handler(state=AddExperienceStates.waiting_for_clinic_name)
-async def add_clinic_name(m:types.Message,s:FSMContext):
+async def add_clinic_name(m:types.Message,state: FSMContext):
     async with s.proxy() as d: d["clinic_name"]=m.text.strip()
     kb=types.ReplyKeyboardMarkup(row_width=3,resize_keyboard=True).add(*PROVINCES)
     await AddExperienceStates.waiting_for_province.set()
     await m.reply("استان؟",reply_markup=kb)
 
 @dp.message_handler(state=AddExperienceStates.waiting_for_province)
-async def add_province(m:types.Message,s:FSMContext):
+async def add_province(m:types.Message,state: FSMContext):
     t=m.text.strip()
     if t not in PROVINCES: await m.reply("استان نامعتبر"); return
     async with s.proxy() as d: d["province"]=t
@@ -154,20 +154,20 @@ async def add_province(m:types.Message,s:FSMContext):
     await m.reply("شهر؟",reply_markup=types.ReplyKeyboardRemove())
 
 @dp.message_handler(state=AddExperienceStates.waiting_for_city)
-async def add_city(m:types.Message,s:FSMContext):
+async def add_city(m:types.Message,state: FSMContext):
     async with s.proxy() as d: d["city"]=m.text.strip()
     await AddExperienceStates.waiting_for_start_date.set()
     await m.reply(f"تاریخ شروع {DATE_FMT}")
 
 @dp.message_handler(state=AddExperienceStates.waiting_for_start_date)
-async def add_start_date(m:types.Message,s:FSMContext):
+async def add_start_date(m:types.Message,state: FSMContext):
     if not _valid_date(m.text.strip()): await m.reply("فرمت غلط"); return
     async with s.proxy() as d: d["start_date"]=m.text.strip()
     await AddExperienceStates.waiting_for_end_date.set()
     await m.reply("تاریخ پایان یا 'نامشخص'")
 
 @dp.message_handler(state=AddExperienceStates.waiting_for_end_date)
-async def add_end_date(m:types.Message,s:FSMContext):
+async def add_end_date(m:types.Message,state: FSMContext):
     t=m.text.strip()
     if t.lower() not in {"نامشخص","نامعلوم"} and not _valid_date(t): await m.reply("فرمت غلط"); return
     async with s.proxy() as d: d["end_date"]=None if t.lower() in {"نامشخص","نامعلوم"} else t
@@ -175,46 +175,46 @@ async def add_end_date(m:types.Message,s:FSMContext):
     await m.reply("وضعیت پرداخت؟")
 
 @dp.message_handler(state=AddExperienceStates.waiting_for_payment)
-async def add_payment(m:types.Message,s:FSMContext):
+async def add_payment(m:types.Message,state: FSMContext):
     async with s.proxy() as d: d["payment"]=m.text.strip()
     kb=types.ReplyKeyboardMarkup(row_width=2,resize_keyboard=True).add(*CONTRACT_OPTIONS)
     await AddExperienceStates.waiting_for_contract.set()
     await m.reply("قرارداد کتبی؟",reply_markup=kb)
 
 @dp.message_handler(state=AddExperienceStates.waiting_for_contract)
-async def add_contract(m:types.Message,s:FSMContext):
+async def add_contract(m:types.Message,state: FSMContext):
     if m.text.strip() not in CONTRACT_OPTIONS: await m.reply("بله/خیر"); return
     async with s.proxy() as d: d["contract_signed"]=1 if m.text.strip()=="بله" else 0
     await AddExperienceStates.waiting_for_patient_culture.set()
     await m.reply("فرهنگ بیماران؟",reply_markup=types.ReplyKeyboardRemove())
 
 @dp.message_handler(state=AddExperienceStates.waiting_for_patient_culture)
-async def add_pculture(m:types.Message,s:FSMContext):
+async def add_pculture(m:types.Message,state: FSMContext):
     async with s.proxy() as d: d["patient_culture"]=m.text.strip()
     await AddExperienceStates.waiting_for_patient_count.set()
     await m.reply("تعداد بیماران؟")
 
 @dp.message_handler(state=AddExperienceStates.waiting_for_patient_count)
-async def add_pcount(m:types.Message,s:FSMContext):
+async def add_pcount(m:types.Message,state: FSMContext):
     async with s.proxy() as d: d["patient_count"]=m.text.strip()
     await AddExperienceStates.waiting_for_insurance_status.set()
     await m.reply("وضعیت بیمه‌ها؟")
 
 @dp.message_handler(state=AddExperienceStates.waiting_for_insurance_status)
-async def add_ins(m:types.Message,s:FSMContext):
+async def add_ins(m:types.Message,state: FSMContext):
     async with s.proxy() as d: d["insurance_status"]=m.text.strip()
     await AddExperienceStates.waiting_for_environment.set()
     await m.reply("محیط کاری؟")
 
 @dp.message_handler(state=AddExperienceStates.waiting_for_environment)
-async def add_env(m:types.Message,s:FSMContext):
+async def add_env(m:types.Message,state: FSMContext):
     async with s.proxy() as d: d["environment"]=m.text.strip()
     kb=types.ReplyKeyboardMarkup(row_width=5,resize_keyboard=True).add(*map(str,range(1,6)))
     await AddExperienceStates.waiting_for_rating.set()
     await m.reply("امتیاز 1-5",reply_markup=kb)
 
 @dp.message_handler(state=AddExperienceStates.waiting_for_rating)
-async def add_rating(m:types.Message,s:FSMContext):
+async def add_rating(m:types.Message,state: FSMContext):
     try: r=int(m.text.strip()); assert 1<=r<=5
     except: await m.reply("عدد 1 تا 5"); return
     async with s.proxy() as d: d["rating"]=r
@@ -223,7 +223,7 @@ async def add_rating(m:types.Message,s:FSMContext):
     await m.reply("توضیحات یا 'رد شدن'",reply_markup=kb)
 
 @dp.message_handler(state=AddExperienceStates.waiting_for_comment)
-async def add_comment(m:types.Message,s:FSMContext):
+async def add_comment(m:types.Message,state: FSMContext):
     comment = "" if m.text.strip().lower()=="رد شدن" else m.text.strip()
     async with s.proxy() as d:
         d["comment"]=comment; d["user_id"]=m.from_user.id
@@ -239,7 +239,7 @@ async def view_start(m:types.Message):
     await m.reply("استان؟",reply_markup=kb)
 
 @dp.message_handler(state=ViewExperienceStates.waiting_for_province)
-async def view_province(m:types.Message,s:FSMContext):
+async def view_province(m:types.Message,state: FSMContext):
     p=m.text.strip()
     if p not in PROVINCES: await m.reply("نامعتبر"); return
     await s.update_data(province=p)
@@ -256,7 +256,7 @@ async def view_province(m:types.Message,s:FSMContext):
 
 @dp.callback_query_handler(lambda c:c.data.startswith("v_"),
                            state=ViewExperienceStates.waiting_for_clinic_selection)
-async def view_clinic(call:types.CallbackQuery,s:FSMContext):
+async def view_clinic(call:types.CallbackQuery,state: FSMContext):
     cid=int(call.data[2:])
     info=get_clinic_by_id(cid)
     if not info: await call.answer("نیست"); return
